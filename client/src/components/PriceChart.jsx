@@ -7,17 +7,45 @@ const PADDING = { top: 16, right: 16, bottom: 28, left: 56 };
 const PLOT_W = WIDTH - PADDING.left - PADDING.right;
 const PLOT_H = HEIGHT - PADDING.top - PADDING.bottom;
 
-// candles are sorted ascending by date; returns the last trading day at or before dateStr.
-function closestCandleIndexForDate(candles, dateStr) {
-  let idx = 0;
+const ET_TZ = "America/New_York";
+
+function closestCandleIndexForTimestamp(candles, targetMs) {
+  let bestIdx = 0;
+  let bestDiff = Infinity;
   for (let i = 0; i < candles.length; i++) {
-    if (candles[i].date <= dateStr) idx = i;
-    else break;
+    const diff = Math.abs(new Date(candles[i].t).getTime() - targetMs);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      bestIdx = i;
+    }
   }
-  return idx;
+  return bestIdx;
 }
 
-export function PriceChart({ ticker, candles, events }) {
+// Tick labels: intraday ranges show time-of-day (multi-day ones also show the date),
+// 1mo shows just the date.
+function formatTick(isoString, range) {
+  const d = new Date(isoString);
+  if (range === "1mo") {
+    return d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", timeZone: ET_TZ });
+  }
+  if (range === "1d") {
+    return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: ET_TZ });
+  }
+  return d.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: ET_TZ });
+}
+
+function formatTooltipDate(isoString) {
+  return new Date(isoString).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: ET_TZ,
+  });
+}
+
+export function PriceChart({ ticker, candles, events, range }) {
   const [hoverIndex, setHoverIndex] = useState(null);
   const [mousePos, setMousePos] = useState(null);
 
@@ -43,15 +71,12 @@ export function PriceChart({ ticker, candles, events }) {
   );
 
   const markers = useMemo(() => {
-    return events
-      .map((e) => {
-        const dateStr = e.occurred_at.slice(0, 10);
-        const idx = closestCandleIndexForDate(candles, dateStr);
-        const candle = candles[idx];
-        if (!candle) return null;
-        return { event: e, x: xScale(idx), y: yScale(candle.close), date: candle.date };
-      })
-      .filter(Boolean);
+    if (candles.length === 0) return [];
+    return events.map((e) => {
+      const idx = closestCandleIndexForTimestamp(candles, new Date(e.occurred_at).getTime());
+      const candle = candles[idx];
+      return { event: e, x: xScale(idx), y: yScale(candle.close), candleIndex: idx };
+    });
   }, [events, candles, xScale, yScale]);
 
   function handleMouseMove(e) {
@@ -71,7 +96,7 @@ export function PriceChart({ ticker, candles, events }) {
   const yTicks = [0, 0.33, 0.66, 1].map((f) => minClose + f * (maxClose - minClose));
   const xTickIndices = [0, Math.floor((candles.length - 1) / 2), candles.length - 1];
   const hovered = hoverIndex != null ? candles[hoverIndex] : null;
-  const hoveredMarkers = hovered ? markers.filter((m) => m.date === hovered.date) : [];
+  const hoveredMarkers = hoverIndex != null ? markers.filter((m) => m.candleIndex === hoverIndex) : [];
 
   return (
     <div className="chart-wrap">
@@ -91,7 +116,7 @@ export function PriceChart({ ticker, candles, events }) {
 
           {xTickIndices.map((i) => (
             <text key={i} x={xScale(i)} y={HEIGHT - 6} className="chart-axis-label" textAnchor="middle">
-              {candles[i].date.slice(5)}
+              {formatTick(candles[i].t, range)}
             </text>
           ))}
 
@@ -126,7 +151,7 @@ export function PriceChart({ ticker, candles, events }) {
             className="chart-tooltip"
             style={{ left: Math.min(mousePos.x + 12, mousePos.width - 220), top: Math.max(mousePos.y - 12, 0) }}
           >
-            <div className="chart-tooltip-date">{hovered.date}</div>
+            <div className="chart-tooltip-date">{formatTooltipDate(hovered.t)}</div>
             <div className="chart-tooltip-price">${hovered.close.toFixed(2)}</div>
             {hoveredMarkers.map((m, i) => (
               <div key={i} className="chart-tooltip-event">

@@ -275,7 +275,41 @@ header h1 {
 }
 
 .page-title {
-  margin: 0 0 1rem;
+  margin: 0;
+}
+
+.page-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.range-selector {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.range-selector button {
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+}
+
+.range-selector button:hover {
+  color: var(--text-primary);
+}
+
+.range-selector button.active {
+  color: var(--text-primary);
+  background: var(--page-plane);
+  border-color: var(--text-muted);
+  font-weight: 600;
 }
 
 /* Price chart */

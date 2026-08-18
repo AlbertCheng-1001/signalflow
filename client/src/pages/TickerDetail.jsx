@@ -6,9 +6,18 @@ import { StatusBadge, CATEGORY_STATUS, URGENCY_STATUS } from "../components/Stat
 import { timeAgo } from "../lib/time";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
+const CANDLE_REFRESH_MS = 60000;
+
+const RANGES = [
+  { key: "1d", label: "1D" },
+  { key: "3d", label: "3D" },
+  { key: "1w", label: "1W" },
+  { key: "1mo", label: "1M" },
+];
 
 export function TickerDetail() {
   const { ticker } = useParams();
+  const [range, setRange] = useState("1d");
   const [candles, setCandles] = useState([]);
   const [candlesError, setCandlesError] = useState(null);
   const [loadingCandles, setLoadingCandles] = useState(true);
@@ -20,40 +29,59 @@ export function TickerDetail() {
     let cancelled = false;
     setLoadingCandles(true);
 
-    fetch(`${API_BASE}/api/tickers/${ticker}/candles?range=3mo`)
-      .then((res) => {
-        if (!res.ok) throw new Error(`API returned ${res.status}`);
-        return res.json();
-      })
-      .then((data) => {
-        if (!cancelled) {
-          setCandles(data.candles);
-          setCandlesError(null);
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) setCandlesError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingCandles(false);
-      });
+    function load() {
+      fetch(`${API_BASE}/api/tickers/${ticker}/candles?range=${range}`)
+        .then((res) => {
+          if (!res.ok) throw new Error(`API returned ${res.status}`);
+          return res.json();
+        })
+        .then((data) => {
+          if (!cancelled) {
+            setCandles(data.candles);
+            setCandlesError(null);
+          }
+        })
+        .catch((err) => {
+          if (!cancelled) setCandlesError(err.message);
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingCandles(false);
+        });
+    }
 
+    load();
+    const id = setInterval(load, CANDLE_REFRESH_MS);
     return () => {
       cancelled = true;
+      clearInterval(id);
     };
-  }, [ticker]);
+  }, [ticker, range]);
 
   return (
     <>
       <Link to="/" className="back-link">&larr; Back to dashboard</Link>
-      <h2 className="page-title">{ticker}</h2>
+      <div className="page-title-row">
+        <h2 className="page-title">{ticker}</h2>
+        <div className="range-selector">
+          {RANGES.map((r) => (
+            <button
+              key={r.key}
+              type="button"
+              className={r.key === range ? "active" : ""}
+              onClick={() => setRange(r.key)}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {candlesError && <div className="error-banner">Failed to load price history: {candlesError}</div>}
 
-      {loadingCandles ? (
+      {loadingCandles && candles.length === 0 ? (
         <p className="page-note">Loading price history…</p>
       ) : (
-        <PriceChart ticker={ticker} candles={candles} events={tickerEvents} />
+        <PriceChart ticker={ticker} candles={candles} events={tickerEvents} range={range} />
       )}
 
       <table className="events-table">
