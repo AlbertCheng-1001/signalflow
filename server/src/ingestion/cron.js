@@ -1,11 +1,12 @@
 import cron from "node-cron";
-import { isMarketHours } from "../config/marketHours.js";
+import { isMarketHours, isNewsHours } from "../config/marketHours.js";
 import { pollNews } from "./pollNews.js";
 import { pollQuotes } from "./pollQuotes.js";
 import { classifyPendingEvents } from "../classification/classify.js";
 
 export function startCronJobs() {
-  // Quotes: every minute during market hours.
+  // Quotes: every minute, regular market hours only - Finnhub's free quote
+  // endpoint is frozen outside this window, so polling wider would be wasted calls.
   cron.schedule("* * * * *", async () => {
     if (!isMarketHours()) return;
     try {
@@ -15,9 +16,10 @@ export function startCronJobs() {
     }
   });
 
-  // News: every 5 minutes during market hours.
+  // News: every 5 minutes, extended hours (4am-10pm ET) - catches pre-market and
+  // after-hours earnings releases that the narrower market-hours window would miss.
   cron.schedule("*/5 * * * *", async () => {
-    if (!isMarketHours()) return;
+    if (!isNewsHours()) return;
     try {
       await pollNews();
     } catch (err) {

@@ -18,15 +18,28 @@ function getEasternParts(date) {
   };
 }
 
-// True Mon-Fri, 9:30am-4:00pm America/New_York. Does not account for market holidays.
-export function isMarketHours(date = new Date()) {
+function isWithinWeekdayWindow(date, openMinutes, closeMinutes) {
   const { weekday, hour, minute } = getEasternParts(date);
 
   if (weekday === "Sat" || weekday === "Sun") return false;
 
   const minutesSinceMidnight = hour * 60 + minute;
-  const open = 9 * 60 + 30;
-  const close = 16 * 60;
+  return minutesSinceMidnight >= openMinutes && minutesSinceMidnight < closeMinutes;
+}
 
-  return minutesSinceMidnight >= open && minutesSinceMidnight < close;
+// True Mon-Fri, 9:30am-4:00pm America/New_York. Does not account for market holidays.
+// Used to gate quote polling - Finnhub's free tier quote endpoint freezes at the
+// regular-session close, so polling outside this window just burns API calls on
+// data that can't have changed (confirmed empirically: last trade timestamp stays
+// pinned to 4:00pm ET no matter when you poll after hours).
+export function isMarketHours(date = new Date()) {
+  return isWithinWeekdayWindow(date, 9 * 60 + 30, 16 * 60);
+}
+
+// True Mon-Fri, 4:00am-10:00pm America/New_York. Wider than isMarketHours because,
+// unlike quotes, news isn't frozen outside the regular session - confirmed
+// empirically that ~60% of a ticker's daily news volume is published pre-market
+// or after-hours (e.g. earnings releases), which the narrower window would miss.
+export function isNewsHours(date = new Date()) {
+  return isWithinWeekdayWindow(date, 4 * 60, 22 * 60);
 }
