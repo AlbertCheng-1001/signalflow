@@ -16,8 +16,9 @@ const SELECT_UNCLASSIFIED_SQL = `
 `;
 
 const INSERT_CLASSIFICATION_SQL = `
-  INSERT INTO classifications (raw_event_id, relevance, urgency, category, rationale)
-  VALUES ($1, $2, $3, $4, $5)
+  INSERT INTO classifications
+    (raw_event_id, relevance, urgency, category, rationale, prompt_tokens, completion_tokens, latency_ms)
+  VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
   RETURNING id
 `;
 
@@ -44,6 +45,7 @@ function eventToPrompt(event) {
 }
 
 async function classifyEvent(event) {
+  const startedAt = Date.now();
   const completion = await openai.chat.completions.create({
     model: process.env.OPENAI_MODEL || "gpt-4o-mini",
     response_format: { type: "json_object" },
@@ -52,6 +54,7 @@ async function classifyEvent(event) {
       { role: "user", content: eventToPrompt(event) },
     ],
   });
+  const latencyMs = Date.now() - startedAt;
 
   const parsed = JSON.parse(completion.choices[0].message.content);
   return {
@@ -59,6 +62,9 @@ async function classifyEvent(event) {
     urgency: parsed.urgency,
     category: parsed.category,
     rationale: parsed.rationale ?? null,
+    promptTokens: completion.usage?.prompt_tokens ?? null,
+    completionTokens: completion.usage?.completion_tokens ?? null,
+    latencyMs,
   };
 }
 
@@ -81,6 +87,9 @@ export async function classifyPendingEvents() {
       result.urgency,
       result.category,
       result.rationale,
+      result.promptTokens,
+      result.completionTokens,
+      result.latencyMs,
     ]);
     classified += 1;
 

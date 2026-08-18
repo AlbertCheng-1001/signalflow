@@ -23,6 +23,10 @@ CREATE TABLE IF NOT EXISTS classifications (
   classified_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+ALTER TABLE classifications ADD COLUMN IF NOT EXISTS prompt_tokens INTEGER;
+ALTER TABLE classifications ADD COLUMN IF NOT EXISTS completion_tokens INTEGER;
+ALTER TABLE classifications ADD COLUMN IF NOT EXISTS latency_ms INTEGER;
+
 CREATE INDEX IF NOT EXISTS idx_classifications_classified_at ON classifications (classified_at);
 
 -- alerts_sent: idempotency guard so an escalated classification only ever triggers one SES email

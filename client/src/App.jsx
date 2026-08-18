@@ -1,6 +1,8 @@
 import { NavLink, Route, Routes } from "react-router-dom";
 import { Dashboard } from "./pages/Dashboard";
 import { Alerts } from "./pages/Alerts";
+import { Stats } from "./pages/Stats";
+import { TickerDetail } from "./pages/TickerDetail";
 import "./App.css";
 
 function App() {
@@ -24,11 +26,16 @@ function App() {
         <NavLink to="/alerts" className={({ isActive }) => (isActive ? "active" : "")}>
           Alerts
         </NavLink>
+        <NavLink to="/stats" className={({ isActive }) => (isActive ? "active" : "")}>
+          Stats
+        </NavLink>
       </nav>
 
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/alerts" element={<Alerts />} />
+        <Route path="/stats" element={<Stats />} />
+        <Route path="/ticker/:ticker" element={<TickerDetail />} />
       </Routes>
     </div>
   );

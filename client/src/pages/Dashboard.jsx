@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { WATCHLIST } from "../watchlist";
 import { usePolling } from "../lib/usePolling";
 import { timeAgo } from "../lib/time";
@@ -95,7 +96,9 @@ export function Dashboard() {
           ) : (
             filteredEvents.map((e) => (
               <tr key={e.id}>
-                <td className="cell-ticker">{e.ticker}</td>
+                <td className="cell-ticker">
+                  <Link to={`/ticker/${e.ticker}`}>{e.ticker}</Link>
+                </td>
                 <td className="cell-muted">{e.type}</td>
                 <td><StatusBadge value={e.category} status={CATEGORY_STATUS[e.category]} /></td>
                 <td><StatusBadge value={e.urgency} status={URGENCY_STATUS[e.urgency]} /></td>
