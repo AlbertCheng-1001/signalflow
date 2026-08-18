@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { eventsRouter } from "./api/events.js";
+import { alertsRouter } from "./api/alerts.js";
 import { startCronJobs } from "./ingestion/cron.js";
 
 const app = express();
@@ -9,6 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api", eventsRouter);
+app.use("/api", alertsRouter);
 
 app.get("/health", (req, res) => res.json({ ok: true }));
 

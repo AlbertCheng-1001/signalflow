@@ -112,6 +112,42 @@ header h1 {
 .stat-value-warning { color: var(--status-warning); }
 .stat-value-critical { color: var(--status-critical); }
 
+.main-nav {
+  display: flex;
+  gap: 1.25rem;
+  border-bottom: 1px solid var(--gridline);
+  margin-bottom: 1.5rem;
+}
+
+.main-nav a {
+  display: inline-block;
+  padding: 0.5rem 0.1rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  border-bottom: 2px solid transparent;
+}
+
+.main-nav a.active {
+  color: var(--text-primary);
+  font-weight: 600;
+  border-bottom-color: var(--status-good);
+}
+
+.page-note {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin: -0.5rem 0 1.25rem;
+}
+
+.page-note code {
+  background: var(--page-plane);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.8rem;
+}
+
 .filters {
   display: flex;
   gap: 1.5rem;
