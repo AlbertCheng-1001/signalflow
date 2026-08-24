@@ -14,12 +14,15 @@ export function Dashboard() {
   const [typeFilter, setTypeFilter] = useState("ALL");
 
   const filteredEvents = useMemo(() => {
-    return events.filter((e) => {
-      if (tickerFilter !== "ALL" && e.ticker !== tickerFilter) return false;
-      if (urgencyFilter !== "ALL" && e.urgency !== urgencyFilter) return false;
-      if (typeFilter !== "ALL" && e.type !== typeFilter) return false;
-      return true;
-    });
+    // events is ascending (oldest first); reverse so the newest shows at the top.
+    return events
+      .filter((e) => {
+        if (tickerFilter !== "ALL" && e.ticker !== tickerFilter) return false;
+        if (urgencyFilter !== "ALL" && e.urgency !== urgencyFilter) return false;
+        if (typeFilter !== "ALL" && e.type !== typeFilter) return false;
+        return true;
+      })
+      .reverse();
   }, [events, tickerFilter, urgencyFilter, typeFilter]);
 
   const counts = useMemo(() => {

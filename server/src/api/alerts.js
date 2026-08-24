@@ -16,9 +16,32 @@ const SELECT_SINCE_SQL = `
   LIMIT 200
 `;
 
+// Same shape/order as SELECT_SINCE_SQL, but for "no cursor yet" - see events.js
+// for why this is needed instead of defaulting to "everything after epoch".
+const SELECT_LATEST_SQL = `
+  SELECT * FROM (
+    SELECT
+      a.id, a.recipient, a.sent_at,
+      re.ticker, re.type, re.payload, re.occurred_at,
+      c.relevance, c.urgency, c.category, c.rationale
+    FROM alerts_sent a
+    JOIN classifications c ON c.id = a.classification_id
+    JOIN raw_events re ON re.id = c.raw_event_id
+    ORDER BY a.sent_at DESC
+    LIMIT 200
+  ) recent
+  ORDER BY sent_at ASC
+`;
+
 // GET /api/alerts?since=<ISO timestamp>
+// Omit `since` to get the latest 200; pass it to get only what's new since that cursor.
 alertsRouter.get("/alerts", async (req, res) => {
-  const since = req.query.since ? new Date(req.query.since) : new Date(0);
+  if (!req.query.since) {
+    const { rows } = await pool.query(SELECT_LATEST_SQL);
+    return res.json({ alerts: rows, asOf: new Date().toISOString() });
+  }
+
+  const since = new Date(req.query.since);
   if (Number.isNaN(since.getTime())) {
     return res.status(400).json({ error: "invalid 'since' timestamp" });
   }

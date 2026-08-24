@@ -1,10 +1,13 @@
+import { useMemo } from "react";
 import { usePolling } from "../lib/usePolling";
 import { timeAgo } from "../lib/time";
 import { StatusBadge, URGENCY_STATUS } from "../components/StatusBadge";
 import { StatTile } from "../components/StatTile";
 
 export function Alerts() {
-  const { items: alerts, error, loading } = usePolling("/api/alerts", "alerts", "sent_at");
+  const { items: rawAlerts, error, loading } = usePolling("/api/alerts", "alerts", "sent_at");
+  // rawAlerts is ascending (oldest first); reverse so the newest shows at the top.
+  const alerts = useMemo(() => [...rawAlerts].reverse(), [rawAlerts]);
 
   return (
     <>

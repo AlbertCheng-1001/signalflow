@@ -23,7 +23,12 @@ export function TickerDetail() {
   const [loadingCandles, setLoadingCandles] = useState(true);
 
   const { items: allEvents } = usePolling("/api/events", "events", "classified_at");
-  const tickerEvents = useMemo(() => allEvents.filter((e) => e.ticker === ticker), [allEvents, ticker]);
+  // allEvents is ascending (oldest first); reverse so the table below shows newest first.
+  // Order doesn't matter for the chart markers, which just need the filtered set.
+  const tickerEvents = useMemo(
+    () => allEvents.filter((e) => e.ticker === ticker).reverse(),
+    [allEvents, ticker]
+  );
 
   useEffect(() => {
     let cancelled = false;
