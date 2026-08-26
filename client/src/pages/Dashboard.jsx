@@ -5,6 +5,7 @@ import { usePolling } from "../lib/usePolling";
 import { timeAgo } from "../lib/time";
 import { StatusBadge, CATEGORY_STATUS, URGENCY_STATUS } from "../components/StatusBadge";
 import { StatTile } from "../components/StatTile";
+import { SourceLink } from "../components/SourceLink";
 
 export function Dashboard() {
   const { items: events, error, loading } = usePolling("/api/events", "events", "classified_at");
@@ -82,17 +83,18 @@ export function Dashboard() {
             <th>Urgency</th>
             <th>Relevance</th>
             <th>Rationale</th>
+            <th>Source</th>
             <th>Classified</th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan={7} className="empty">Loading events…</td>
+              <td colSpan={8} className="empty">Loading events…</td>
             </tr>
           ) : filteredEvents.length === 0 ? (
             <tr>
-              <td colSpan={7} className="empty">
+              <td colSpan={8} className="empty">
                 {events.length === 0 ? "No events yet — waiting for market activity." : "No events match the current filters."}
               </td>
             </tr>
@@ -107,6 +109,7 @@ export function Dashboard() {
                 <td><StatusBadge value={e.urgency} status={URGENCY_STATUS[e.urgency]} /></td>
                 <td className="cell-tabular">{e.relevance}</td>
                 <td className="cell-rationale">{e.rationale}</td>
+                <td><SourceLink event={e} /></td>
                 <td className="cell-muted" title={new Date(e.classified_at).toLocaleString()}>
                   {timeAgo(e.classified_at)}
                 </td>

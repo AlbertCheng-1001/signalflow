@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { usePolling } from "../lib/usePolling";
 import { PriceChart } from "../components/PriceChart";
 import { StatusBadge, CATEGORY_STATUS, URGENCY_STATUS } from "../components/StatusBadge";
+import { SourceLink } from "../components/SourceLink";
 import { timeAgo } from "../lib/time";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:4000";
@@ -97,13 +98,14 @@ export function TickerDetail() {
             <th>Urgency</th>
             <th>Relevance</th>
             <th>Rationale</th>
+            <th>Source</th>
             <th>Classified</th>
           </tr>
         </thead>
         <tbody>
           {tickerEvents.length === 0 ? (
             <tr>
-              <td colSpan={6} className="empty">No events yet for {ticker}.</td>
+              <td colSpan={7} className="empty">No events yet for {ticker}.</td>
             </tr>
           ) : (
             tickerEvents.map((e) => (
@@ -113,6 +115,7 @@ export function TickerDetail() {
                 <td><StatusBadge value={e.urgency} status={URGENCY_STATUS[e.urgency]} /></td>
                 <td className="cell-tabular">{e.relevance}</td>
                 <td className="cell-rationale">{e.rationale}</td>
+                <td><SourceLink event={e} /></td>
                 <td className="cell-muted" title={new Date(e.classified_at).toLocaleString()}>
                   {timeAgo(e.classified_at)}
                 </td>

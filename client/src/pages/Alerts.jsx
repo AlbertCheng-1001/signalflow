@@ -3,6 +3,7 @@ import { usePolling } from "../lib/usePolling";
 import { timeAgo } from "../lib/time";
 import { StatusBadge, URGENCY_STATUS } from "../components/StatusBadge";
 import { StatTile } from "../components/StatTile";
+import { SourceLink } from "../components/SourceLink";
 
 export function Alerts() {
   const { items: rawAlerts, error, loading } = usePolling("/api/alerts", "alerts", "sent_at");
@@ -31,6 +32,7 @@ export function Alerts() {
             <th>Urgency</th>
             <th>Relevance</th>
             <th>Rationale</th>
+            <th>Source</th>
             <th>Recipient</th>
             <th>Sent</th>
           </tr>
@@ -38,11 +40,11 @@ export function Alerts() {
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan={7} className="empty">Loading alerts…</td>
+              <td colSpan={8} className="empty">Loading alerts…</td>
             </tr>
           ) : alerts.length === 0 ? (
             <tr>
-              <td colSpan={7} className="empty">
+              <td colSpan={8} className="empty">
                 No alerts sent yet — escalations trigger an email automatically.
               </td>
             </tr>
@@ -54,6 +56,7 @@ export function Alerts() {
                 <td><StatusBadge value={a.urgency} status={URGENCY_STATUS[a.urgency]} /></td>
                 <td className="cell-tabular">{a.relevance}</td>
                 <td className="cell-rationale">{a.rationale}</td>
+                <td><SourceLink event={a} /></td>
                 <td className="cell-muted">{a.recipient}</td>
                 <td className="cell-muted" title={new Date(a.sent_at).toLocaleString()}>
                   {timeAgo(a.sent_at)}

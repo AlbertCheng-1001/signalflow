@@ -219,6 +219,17 @@ header h1 {
   color: var(--text-muted);
 }
 
+.source-link {
+  color: var(--series-1);
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 0.85rem;
+}
+
+.source-link:hover {
+  text-decoration: underline;
+}
+
 .cell-tabular {
   font-variant-numeric: tabular-nums;
 }
