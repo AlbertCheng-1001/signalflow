@@ -12,6 +12,14 @@ CREATE TABLE IF NOT EXISTS raw_events (
 CREATE INDEX IF NOT EXISTS idx_raw_events_ticker ON raw_events (ticker);
 CREATE INDEX IF NOT EXISTS idx_raw_events_created_at ON raw_events (created_at);
 
+-- Semantic dedup: news events get an embedding for similarity comparison against
+-- recent same-ticker news. duplicate_of_id points at the earlier event this one
+-- is a near-duplicate of (different outlet, same underlying story) - duplicates
+-- are excluded from classification entirely rather than being separately alerted.
+ALTER TABLE raw_events ADD COLUMN IF NOT EXISTS embedding JSONB;
+ALTER TABLE raw_events ADD COLUMN IF NOT EXISTS duplicate_of_id INTEGER REFERENCES raw_events (id);
+ALTER TABLE raw_events ADD COLUMN IF NOT EXISTS duplicate_similarity REAL;
+
 -- classifications: one OpenAI classification result per raw_event
 CREATE TABLE IF NOT EXISTS classifications (
   id             SERIAL PRIMARY KEY,

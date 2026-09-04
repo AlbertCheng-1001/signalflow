@@ -73,6 +73,15 @@ export function Stats() {
               }
             />
           </div>
+          <div className="stat-tiles">
+            <StatTile label="Duplicates suppressed" value={stats.duplicatesSuppressed} status="good" />
+            <StatTile label="Est. savings from dedup" value={`$${stats.estimatedSavingsUsd.toFixed(4)}`} status="good" />
+          </div>
+          <p className="page-note">
+            Near-duplicate news (multiple outlets covering the same underlying event) is detected
+            via OpenAI embeddings + cosine similarity against recent same-ticker news, and
+            excluded from classification entirely rather than triggering a separate alert.
+          </p>
         </>
       )}
     </>
