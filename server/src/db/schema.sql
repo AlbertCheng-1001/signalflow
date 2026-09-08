@@ -44,3 +44,19 @@ CREATE TABLE IF NOT EXISTS alerts_sent (
   recipient          TEXT NOT NULL,
   sent_at            TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- users: basic account support (email + password login)
+CREATE TABLE IF NOT EXISTS users (
+  id             SERIAL PRIMARY KEY,
+  email          TEXT NOT NULL UNIQUE,
+  password_hash  TEXT NOT NULL,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- favorites: a user's personal watchlist, drawn from the fixed WATCHLIST tickers
+CREATE TABLE IF NOT EXISTS favorites (
+  user_id     INTEGER NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+  ticker      TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, ticker)
+);

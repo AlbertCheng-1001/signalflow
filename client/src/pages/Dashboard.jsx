@@ -7,6 +7,7 @@ import { timeAgo } from "../lib/time";
 import { StatusBadge, CATEGORY_STATUS, URGENCY_STATUS } from "../components/StatusBadge";
 import { StatTile } from "../components/StatTile";
 import { SourceLink } from "../components/SourceLink";
+import { FavoriteButton } from "../components/FavoriteButton";
 
 export function Dashboard() {
   const { items: events, error, loading } = usePolling("/api/events", "events", "classified_at");
@@ -115,6 +116,7 @@ export function Dashboard() {
               visible.map((e) => (
                 <tr key={e.id}>
                   <td className="cell-ticker">
+                    <FavoriteButton ticker={e.ticker} />
                     <Link to={`/ticker/${e.ticker}`}>{e.ticker}</Link>
                   </td>
                   <td className="cell-muted">{e.type}</td>

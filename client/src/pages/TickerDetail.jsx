@@ -3,6 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { usePolling } from "../lib/usePolling";
 import { useShowMore } from "../lib/useShowMore";
 import { PriceChart } from "../components/PriceChart";
+import { FavoriteButton } from "../components/FavoriteButton";
 import { StatusBadge, CATEGORY_STATUS, URGENCY_STATUS } from "../components/StatusBadge";
 import { SourceLink } from "../components/SourceLink";
 import { timeAgo } from "../lib/time";
@@ -69,7 +70,10 @@ export function TickerDetail() {
     <>
       <Link to="/" className="back-link">&larr; Back to dashboard</Link>
       <div className="page-title-row">
-        <h2 className="page-title">{ticker}</h2>
+        <h2 className="page-title">
+          <FavoriteButton ticker={ticker} />
+          {ticker}
+        </h2>
         <div className="range-selector">
           {RANGES.map((r) => (
             <button
