@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { WATCHLIST } from "../watchlist";
 import { usePolling } from "../lib/usePolling";
+import { useShowMore } from "../lib/useShowMore";
 import { timeAgo } from "../lib/time";
 import { StatusBadge, CATEGORY_STATUS, URGENCY_STATUS } from "../components/StatusBadge";
 import { StatTile } from "../components/StatTile";
@@ -32,6 +33,11 @@ export function Dashboard() {
     return result;
   }, [events]);
 
+  const { visible, hasMore, showMore } = useShowMore(
+    filteredEvents,
+    `${tickerFilter}|${urgencyFilter}|${typeFilter}`
+  );
+
   return (
     <>
       <div className="stat-tiles">
@@ -41,83 +47,96 @@ export function Dashboard() {
         <StatTile label="Ignore" value={counts.ignore} status="good" />
       </div>
 
-      <div className="filters">
-        <label>
-          Ticker
-          <select value={tickerFilter} onChange={(e) => setTickerFilter(e.target.value)}>
-            <option value="ALL">All</option>
-            {WATCHLIST.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </label>
+      <div className="toolbar">
+        <div className="filters">
+          <label>
+            Ticker
+            <select value={tickerFilter} onChange={(e) => setTickerFilter(e.target.value)}>
+              <option value="ALL">All</option>
+              {WATCHLIST.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </label>
 
-        <label>
-          Urgency
-          <select value={urgencyFilter} onChange={(e) => setUrgencyFilter(e.target.value)}>
-            <option value="ALL">All</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
-        </label>
+          <label>
+            Urgency
+            <select value={urgencyFilter} onChange={(e) => setUrgencyFilter(e.target.value)}>
+              <option value="ALL">All</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </label>
 
-        <label>
-          Type
-          <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
-            <option value="ALL">All</option>
-            <option value="news">News</option>
-            <option value="price_move">Price move</option>
-          </select>
-        </label>
+          <label>
+            Type
+            <select value={typeFilter} onChange={(e) => setTypeFilter(e.target.value)}>
+              <option value="ALL">All</option>
+              <option value="news">News</option>
+              <option value="price_move">Price move</option>
+            </select>
+          </label>
+        </div>
+
+        <span className="result-count">
+          {filteredEvents.length.toLocaleString()} event{filteredEvents.length === 1 ? "" : "s"}
+        </span>
       </div>
 
       {error && <div className="error-banner">Polling error: {error}</div>}
 
-      <table className="events-table">
-        <thead>
-          <tr>
-            <th>Ticker</th>
-            <th>Type</th>
-            <th>Category</th>
-            <th>Urgency</th>
-            <th>Relevance</th>
-            <th>Rationale</th>
-            <th>Source</th>
-            <th>Classified</th>
-          </tr>
-        </thead>
-        <tbody>
-          {loading ? (
+      <div className="table-card">
+        <table className="events-table">
+          <thead>
             <tr>
-              <td colSpan={8} className="empty">Loading events…</td>
+              <th>Ticker</th>
+              <th>Type</th>
+              <th>Category</th>
+              <th>Urgency</th>
+              <th className="col-numeric">Relevance</th>
+              <th>Rationale</th>
+              <th>Source</th>
+              <th>Classified</th>
             </tr>
-          ) : filteredEvents.length === 0 ? (
-            <tr>
-              <td colSpan={8} className="empty">
-                {events.length === 0 ? "No events yet — waiting for market activity." : "No events match the current filters."}
-              </td>
-            </tr>
-          ) : (
-            filteredEvents.map((e) => (
-              <tr key={e.id}>
-                <td className="cell-ticker">
-                  <Link to={`/ticker/${e.ticker}`}>{e.ticker}</Link>
-                </td>
-                <td className="cell-muted">{e.type}</td>
-                <td><StatusBadge value={e.category} status={CATEGORY_STATUS[e.category]} /></td>
-                <td><StatusBadge value={e.urgency} status={URGENCY_STATUS[e.urgency]} /></td>
-                <td className="cell-tabular">{e.relevance}</td>
-                <td className="cell-rationale">{e.rationale}</td>
-                <td><SourceLink event={e} /></td>
-                <td className="cell-muted" title={new Date(e.classified_at).toLocaleString()}>
-                  {timeAgo(e.classified_at)}
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={8} className="empty">Loading events…</td>
+              </tr>
+            ) : filteredEvents.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="empty">
+                  {events.length === 0 ? "No events yet — waiting for market activity." : "No events match the current filters."}
                 </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              visible.map((e) => (
+                <tr key={e.id}>
+                  <td className="cell-ticker">
+                    <Link to={`/ticker/${e.ticker}`}>{e.ticker}</Link>
+                  </td>
+                  <td className="cell-muted">{e.type}</td>
+                  <td><StatusBadge value={e.category} status={CATEGORY_STATUS[e.category]} /></td>
+                  <td><StatusBadge value={e.urgency} status={URGENCY_STATUS[e.urgency]} /></td>
+                  <td className="cell-tabular col-numeric">{e.relevance}</td>
+                  <td className="cell-rationale">{e.rationale}</td>
+                  <td><SourceLink event={e} /></td>
+                  <td className="cell-muted" title={new Date(e.classified_at).toLocaleString()}>
+                    {timeAgo(e.classified_at)}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+        {hasMore && (
+          <button type="button" className="load-more" onClick={showMore}>
+            Show more
+          </button>
+        )}
+      </div>
     </>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { usePolling } from "../lib/usePolling";
+import { useShowMore } from "../lib/useShowMore";
 import { PriceChart } from "../components/PriceChart";
 import { StatusBadge, CATEGORY_STATUS, URGENCY_STATUS } from "../components/StatusBadge";
 import { SourceLink } from "../components/SourceLink";
@@ -30,6 +31,7 @@ export function TickerDetail() {
     () => allEvents.filter((e) => e.ticker === ticker).reverse(),
     [allEvents, ticker]
   );
+  const { visible, hasMore, showMore } = useShowMore(tickerEvents, ticker);
 
   useEffect(() => {
     let cancelled = false;
@@ -90,40 +92,47 @@ export function TickerDetail() {
         <PriceChart ticker={ticker} candles={candles} events={tickerEvents} range={range} />
       )}
 
-      <table className="events-table">
-        <thead>
-          <tr>
-            <th>Type</th>
-            <th>Category</th>
-            <th>Urgency</th>
-            <th>Relevance</th>
-            <th>Rationale</th>
-            <th>Source</th>
-            <th>Classified</th>
-          </tr>
-        </thead>
-        <tbody>
-          {tickerEvents.length === 0 ? (
+      <div className="table-card">
+        <table className="events-table">
+          <thead>
             <tr>
-              <td colSpan={7} className="empty">No events yet for {ticker}.</td>
+              <th>Type</th>
+              <th>Category</th>
+              <th>Urgency</th>
+              <th className="col-numeric">Relevance</th>
+              <th>Rationale</th>
+              <th>Source</th>
+              <th>Classified</th>
             </tr>
-          ) : (
-            tickerEvents.map((e) => (
-              <tr key={e.id}>
-                <td className="cell-muted">{e.type}</td>
-                <td><StatusBadge value={e.category} status={CATEGORY_STATUS[e.category]} /></td>
-                <td><StatusBadge value={e.urgency} status={URGENCY_STATUS[e.urgency]} /></td>
-                <td className="cell-tabular">{e.relevance}</td>
-                <td className="cell-rationale">{e.rationale}</td>
-                <td><SourceLink event={e} /></td>
-                <td className="cell-muted" title={new Date(e.classified_at).toLocaleString()}>
-                  {timeAgo(e.classified_at)}
-                </td>
+          </thead>
+          <tbody>
+            {tickerEvents.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="empty">No events yet for {ticker}.</td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ) : (
+              visible.map((e) => (
+                <tr key={e.id}>
+                  <td className="cell-muted">{e.type}</td>
+                  <td><StatusBadge value={e.category} status={CATEGORY_STATUS[e.category]} /></td>
+                  <td><StatusBadge value={e.urgency} status={URGENCY_STATUS[e.urgency]} /></td>
+                  <td className="cell-tabular col-numeric">{e.relevance}</td>
+                  <td className="cell-rationale">{e.rationale}</td>
+                  <td><SourceLink event={e} /></td>
+                  <td className="cell-muted" title={new Date(e.classified_at).toLocaleString()}>
+                    {timeAgo(e.classified_at)}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+        {hasMore && (
+          <button type="button" className="load-more" onClick={showMore}>
+            Show more
+          </button>
+        )}
+      </div>
     </>
   );
 }
